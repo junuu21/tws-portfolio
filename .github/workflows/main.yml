@@ -3,21 +3,32 @@ name: Portfolio Deployment
 on:
   push:
     branches:
-    - main
+      - main
+
+permissions:
+  # Only needed if you switch to OIDC (optional)
+  id-token: write
+  contents: read
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v1
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v5
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Deploy static site to S3 bucket
-      run: aws s3 sync . s3://tws-myportfolio21  --delete
+    - name: Sync site to S3
+      run: |
+        aws s3 sync ./ s3://tws-myportfolio21 \
+          --delete \
+          --exclude ".git/*" \
+          --exclude ".github/*" \
+          --exclude "README.md"
